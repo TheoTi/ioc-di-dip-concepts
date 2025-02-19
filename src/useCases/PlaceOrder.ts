@@ -2,6 +2,7 @@ import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import { sqsUrls } from '../configs/sqsUrls'
 import { Order } from '../entities/Order'
+import { SQSGateway } from '../gateways/SQSGateway'
 import { DynamoOrdersTableRepository } from '../repository/DynamoOrdersTableRepository'
 
 export class PlaceOrder {
@@ -11,19 +12,10 @@ export class PlaceOrder {
 
 		const order = new Order(customerEmail, amount)
 		const dynamoOrdersTableRepository = new DynamoOrdersTableRepository()
+		const sqsGateway = new SQSGateway()
 
 		await dynamoOrdersTableRepository.create(order)
-
-		const sqsClient = new SQSClient({
-			region: 'sa-east-1',
-		})
-		const sendMessageCommand = new SendMessageCommand({
-			QueueUrl: sqsUrls.processPaymentQueue,
-			MessageBody: JSON.stringify({
-				orderId: order.id,
-			}),
-		})
-		await sqsClient.send(sendMessageCommand)
+		await sqsGateway.publishMessage({ orderId: order.id })
 
 		const sesClient = new SESClient({ region: 'sa-east-1' })
 		const sendEmailCommand = new SendEmailCommand({
