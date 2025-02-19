@@ -1,13 +1,13 @@
 import { Order } from '../entities/Order'
-import type { SESGateway } from '../gateways/SESGateway'
-import type { SQSGateway } from '../gateways/SQSGateway'
-import type { DynamoOrdersTableRepository } from '../repository/DynamoOrdersTableRepository'
+import type { IEmailGateway } from '../interfaces/gateways/IEmailGateway'
+import type { IQueueGateway } from '../interfaces/gateways/IQueueGateway'
+import type { IOrdersRepository } from '../interfaces/repositories/IOrdersRepository'
 
 export class PlaceOrder {
 	constructor(
-		private readonly dynamoOrdersTableRepository: DynamoOrdersTableRepository,
-		private readonly sqsGateway: SQSGateway,
-		private readonly sesGateway: SESGateway,
+		private readonly ordersRepository: IOrdersRepository,
+		private readonly queueGateway: IQueueGateway,
+		private readonly emailGateway: IEmailGateway,
 	) {}
 
 	async execute() {
@@ -16,9 +16,9 @@ export class PlaceOrder {
 
 		const order = new Order(customerEmail, amount)
 
-		await this.dynamoOrdersTableRepository.create(order)
-		await this.sqsGateway.publishMessage({ orderId: order.id })
-		await this.sesGateway.sendEmail({
+		await this.ordersRepository.create(order)
+		await this.queueGateway.publishMessage({ orderId: order.id })
+		await this.emailGateway.sendEmail({
 			from: 'matheusti.contato@gmail.com',
 			to: [customerEmail],
 			subject: `Pedido #${order.id} confirmado!`,
