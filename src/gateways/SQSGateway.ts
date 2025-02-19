@@ -7,10 +7,10 @@ export class SQSGateway {
 	})
 
 	async publishMessage(message: Record<string, unknown>) {
-		const sendMessageCommand = new SendMessageCommand({
+		const command = new SendMessageCommand({
 			QueueUrl: sqsUrls.processPaymentQueue,
 			MessageBody: JSON.stringify(message),
 		})
-		await this.client.send(sendMessageCommand)
+		await this.client.send(command)
 	}
 }
