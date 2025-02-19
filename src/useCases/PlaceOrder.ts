@@ -1,21 +1,24 @@
 import { Order } from '../entities/Order'
-import { SESGateway } from '../gateways/SESGateway'
-import { SQSGateway } from '../gateways/SQSGateway'
-import { DynamoOrdersTableRepository } from '../repository/DynamoOrdersTableRepository'
+import type { SESGateway } from '../gateways/SESGateway'
+import type { SQSGateway } from '../gateways/SQSGateway'
+import type { DynamoOrdersTableRepository } from '../repository/DynamoOrdersTableRepository'
 
 export class PlaceOrder {
+	constructor(
+		private readonly dynamoOrdersTableRepository: DynamoOrdersTableRepository,
+		private readonly sqsGateway: SQSGateway,
+		private readonly sesGateway: SESGateway,
+	) {}
+
 	async execute() {
 		const customerEmail = 'matheusti.contato@gmail.com'
 		const amount = Math.ceil(Math.random() * 1000)
 
 		const order = new Order(customerEmail, amount)
-		const dynamoOrdersTableRepository = new DynamoOrdersTableRepository()
-		const sqsGateway = new SQSGateway()
-		const sesGateway = new SESGateway()
 
-		await dynamoOrdersTableRepository.create(order)
-		await sqsGateway.publishMessage({ orderId: order.id })
-		await sesGateway.sendEmail({
+		await this.dynamoOrdersTableRepository.create(order)
+		await this.sqsGateway.publishMessage({ orderId: order.id })
+		await this.sesGateway.sendEmail({
 			from: 'matheusti.contato@gmail.com',
 			to: [customerEmail],
 			subject: `Pedido #${order.id} confirmado!`,

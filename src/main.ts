@@ -3,12 +3,23 @@ import fastify from 'fastify'
 
 dotenv.config()
 
+import { SESGateway } from './gateways/SESGateway'
+import { SQSGateway } from './gateways/SQSGateway'
+import { DynamoOrdersTableRepository } from './repository/DynamoOrdersTableRepository'
 import { PlaceOrder } from './useCases/PlaceOrder'
 
 const app = fastify()
 
 app.post('/orders', async (_, reply) => {
-	const placeOrder = new PlaceOrder()
+	const dynamoOrdersTableRepository = new DynamoOrdersTableRepository()
+	const sqsGateway = new SQSGateway()
+	const sesGateway = new SESGateway()
+
+	const placeOrder = new PlaceOrder(
+		dynamoOrdersTableRepository,
+		sqsGateway,
+		sesGateway,
+	)
 
 	const { orderId } = await placeOrder.execute()
 
