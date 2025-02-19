@@ -1,10 +1,8 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb'
-import { dynamodbTables } from '../configs/dynamodbTables'
 import { sqsUrls } from '../configs/sqsUrls'
 import { Order } from '../entities/Order'
+import { DynamoOrdersTableRepository } from '../repository/DynamoOrdersTableRepository'
 
 export class PlaceOrder {
 	async execute() {
@@ -12,21 +10,9 @@ export class PlaceOrder {
 		const amount = Math.ceil(Math.random() * 1000)
 
 		const order = new Order(customerEmail, amount)
+		const dynamoOrdersTableRepository = new DynamoOrdersTableRepository()
 
-		const ddbClient = DynamoDBDocumentClient.from(
-			new DynamoDBClient({
-				region: 'sa-east-1',
-			}),
-		)
-		const putItemCommand = new PutCommand({
-			TableName: dynamodbTables.ordersTable,
-			Item: {
-				id: order.id,
-				email: customerEmail,
-				amount,
-			},
-		})
-		await ddbClient.send(putItemCommand)
+		await dynamoOrdersTableRepository.create(order)
 
 		const sqsClient = new SQSClient({
 			region: 'sa-east-1',
