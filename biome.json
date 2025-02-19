@@ -29,6 +29,14 @@
 
 			"style": {
 				"useBlockStatements": "warn"
+			},
+
+			"suspicious": {
+				"noExplicitAny": "off"
+			},
+
+			"complexity": {
+				"noThisInStatic": "off"
 			}
 		}
 	},
