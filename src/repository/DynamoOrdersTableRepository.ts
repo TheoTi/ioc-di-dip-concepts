@@ -1,12 +1,16 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb'
 import { dynamodbTables } from '../configs/dynamodbTables'
-import { Injectable } from '../di/Injectable'
+import { Inject } from '../di/Inject'
 import type { Order } from '../entities/Order'
+import type { ILogGateway } from '../interfaces/gateways/ILogGateway'
 import type { IOrdersRepository } from '../interfaces/repositories/IOrdersRepository'
 
-@Injectable()
 export class DynamoOrdersTableRepository implements IOrdersRepository {
+	constructor(
+		@Inject('LogGateway') private readonly logGateway: ILogGateway
+	) {}
+
 	private client = DynamoDBDocumentClient.from(
 		new DynamoDBClient({
 			region: 'sa-east-1',
@@ -18,6 +22,8 @@ export class DynamoOrdersTableRepository implements IOrdersRepository {
 			TableName: dynamodbTables.ordersTable,
 			Item: order,
 		})
+
+		await this.logGateway.log({ ...order })
 
 		await this.client.send(putItemCommand)
 	}

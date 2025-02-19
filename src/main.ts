@@ -1,24 +1,17 @@
+import 'reflect-metadata'
+
 import dotenv from 'dotenv'
 import fastify from 'fastify'
 
 dotenv.config()
 
-import { Registry } from './di/Registry'
-import { SESGateway } from './gateways/SESGateway'
-import { SQSGateway } from './gateways/SQSGateway'
-import { DynamoOrdersTableRepository } from './repository/DynamoOrdersTableRepository'
-import { PlaceOrder } from './useCases/PlaceOrder'
+import { container } from './di/container'
+import type { PlaceOrder } from './useCases/PlaceOrder'
 
 const app = fastify()
 
-const container = Registry.getInstance()
-
 app.post('/orders', async (_, reply) => {
-	const placeOrder = new PlaceOrder(
-		container.resolve(DynamoOrdersTableRepository),
-		container.resolve(SQSGateway),
-		container.resolve(SESGateway),
-	)
+	const placeOrder = container.resolve<PlaceOrder>('PlaceOrder')
 
 	const { orderId } = await placeOrder.execute()
 

@@ -1,3 +1,4 @@
+import { Inject } from '../di/Inject'
 import { Order } from '../entities/Order'
 import type { IEmailGateway } from '../interfaces/gateways/IEmailGateway'
 import type { IQueueGateway } from '../interfaces/gateways/IQueueGateway'
@@ -5,9 +6,9 @@ import type { IOrdersRepository } from '../interfaces/repositories/IOrdersReposi
 
 export class PlaceOrder {
 	constructor(
-		private readonly ordersRepository: IOrdersRepository,
-		private readonly queueGateway: IQueueGateway,
-		private readonly emailGateway: IEmailGateway,
+		@Inject('OrdersRepository') private readonly ordersRepository: IOrdersRepository,
+		@Inject('QueueGateway') private readonly queueGateway: IQueueGateway,
+		@Inject('EmailGateway') private readonly emailGateway: IEmailGateway,
 	) {}
 
 	async execute() {

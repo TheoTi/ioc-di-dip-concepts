@@ -149,3 +149,7 @@ export class PlaceOrder {
 ``
 
 `PlaceOrder` é um High-level module, enquanto as implementações `DynamoOrdersTableRepository`, `SQSGateway`e `SESGateway` são Low-level modules.
+
+
+## Dependency Injection Container
+Objeto que contém todas as dependências que utilizaremos ao longo do projeto

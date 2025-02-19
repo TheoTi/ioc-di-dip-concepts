@@ -15,9 +15,7 @@ export class Registry {
 		return this.instance
 	}
 
-	register<T>(implementation: Constructor<T>) {
-		const token = implementation.name
-
+	register<T>(token: string, implementation: Constructor<T>) {
 		if (this.services.has(token)) {
 			throw new Error(`${token} is already registered.`)
 		}
@@ -25,14 +23,24 @@ export class Registry {
 		this.services.set(token, implementation)
 	}
 
-	resolve<T>(implementation: Constructor<T>): T {
-		const token = implementation.name
-		const Impl = this.services.get(token)
+	resolve<T>(token: string): T {
+		const Implementation = this.services.get(token)
 
-		if (!Impl) {
+		if (!Implementation) {
 			throw new Error(`"${token}" was not found in the Registry.`)
 		}
 
-		return new Impl()
+		const paramTypes: any[] =
+			Reflect.getMetadata('design:paramtypes', Implementation) ?? []
+		const dependencies = paramTypes.map((_, index) => {
+			const dependencyToken = Reflect.getMetadata(
+				`inject:${index}`,
+				Implementation,
+			)
+
+			return this.resolve(dependencyToken)
+		})
+
+		return new Implementation(...dependencies)
 	}
 }
