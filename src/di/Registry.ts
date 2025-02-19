@@ -1,7 +1,7 @@
-type TConstructor<T> = new (...args: any[]) => T
+import type { Constructor } from '../types/utils'
 
 export class Registry {
-	private readonly services: Map<string, TConstructor<any>> = new Map()
+	private readonly services: Map<string, Constructor<any>> = new Map()
 
 	private static instance: Registry
 
@@ -15,7 +15,7 @@ export class Registry {
 		return this.instance
 	}
 
-	register<T>(implementation: TConstructor<T>) {
+	register<T>(implementation: Constructor<T>) {
 		const token = implementation.name
 
 		if (this.services.has(token)) {
@@ -25,7 +25,7 @@ export class Registry {
 		this.services.set(token, implementation)
 	}
 
-	resolve<T>(implementation: TConstructor<T>): T {
+	resolve<T>(implementation: Constructor<T>): T {
 		const token = implementation.name
 		const Impl = this.services.get(token)
 
