@@ -4,6 +4,7 @@
 
 
 S -> Single Responsibility Principle <SRP>
+D -> Dependency Inversion Principle <DIP>
 
 ### Source Code Dependency
 Direção em que as dependências do meu código vão
@@ -12,7 +13,7 @@ Ex: PlaceOrderUseCase -> SQSGateway -> SQSClient...
 ### Flow of control
 Ordem em que é executado o fluxo de execução do código
 
-### Inversion of Control (IoC)
+## Inversion of Control (IoC)
 Mantenha a regra de negócio LIMPA e delegue configurações/lifecycles para sistemas/frameworks/coisas externas.
 
 Nós não chamamos o framework.O framework é que nos chama.
@@ -101,3 +102,50 @@ Seguindo o exemplo utilizado na seção `Aggregation`, tanto `PlaceOrder`como os
 
 É interessante ter olhar crítico ao criar abstrações dentro do sistema, criar abstrações desnecessárias pode trazer muita complexidade para o projeto de forma desnecessária.
 Bibliotecas que são utilizadas em muitas partes do código como por exemplo uma lib de geração de hash como `bcrypt` que é utilizada em mais de uma área do sistema, ou serviços externos tendem a ser fortes candidatos para abstrações.
+
+
+## Dependency Inversion Principle (DIP)
+`High-level` modules should not depend on `low-level` modules.
+Both should be depend on `abstractions`.
+
+High-level modules: códigos de regra de negócio;
+Low-level modules: implementações de infraestrutura, interação com fonte de dados, serviços externos e outros.
+
+Seguindo o exemplo abaixo
+
+``
+
+export class PlaceOrder {
+	constructor(
+		private readonly dynamoOrdersTableRepository: DynamoOrdersTableRepository,
+		private readonly sqsGateway: SQSGateway,
+		private readonly sesGateway: SESGateway,
+	) {}
+
+	async execute() {
+		const customerEmail = 'matheusti.contato@gmail.com'
+		const amount = Math.ceil(Math.random() * 1000)
+
+		const order = new Order(customerEmail, amount)
+
+		await this.dynamoOrdersTableRepository.create(order)
+		await this.sqsGateway.publishMessage({ orderId: order.id })
+		await this.sesGateway.sendEmail({
+			from: 'matheusti.contato@gmail.com',
+			to: [customerEmail],
+			subject: `Pedido #${order.id} confirmado!`,
+			html: `
+				<h1>E aí, galera!</h1>
+
+				<p>Passando aqui só pra avisar que o seu pedido já foi confirmado e em breve você receberá a confirmação do pagamento e a nota fiscal aqui no seu e-mail!</p>
+			`,
+		})
+
+		return {
+			orderId: order.id,
+		}
+	}
+}
+``
+
+`PlaceOrder` é um High-level module, enquanto as implementações `DynamoOrdersTableRepository`, `SQSGateway`e `SESGateway` são Low-level modules.
