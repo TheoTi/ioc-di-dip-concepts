@@ -1,155 +1,207 @@
-## Salva o pedido no banco de dados
-## Publica uma mensagem na fila para processar o pagamento
-## Faz o envio de um e-mail de confirmação do pedido para o cliente
+# Inversion of Control, Dependency Injection, and Dependency Inversion
 
+---
 
-S -> Single Responsibility Principle <SRP>
-D -> Dependency Inversion Principle <DIP>
+### Tools Used
+
+<p align="left">
+<a href="https://www.typescriptlang.org/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/typescript-colored.svg" width="36" height="36" alt="TypeScript" /></a>
+<a href="https://git-scm.com/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/git-colored.svg" width="36" height="36" alt="Git" /></a>
+<a href="https://nodejs.org/en/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/nodejs-colored.svg" width="36" height="36" alt="NodeJS" /></a>
+<a href="https://aws.amazon.com" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/aws-colored.svg" width="36" height="36" alt="Amazon Web Services" /></a>
+<a href="https://www.linux.org" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/linux-colored.svg" width="36" height="36" alt="Linux" /></a>
+</p>
+
+---
+
+### Social Media
+
+<p align="left">
+<a href="https://www.github.com/theoti" target="_blank" rel="noreferrer">
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/socials/github-dark.svg" />
+<source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/socials/github.svg" />
+<img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/socials/github.svg" width="32" height="32" />
+</picture>
+</a>
+<a href="https://www.linkedin.com/in/matheus-fernandes-14919118a" target="_blank" rel="noreferrer">
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/socials/linkedin-dark.svg" />
+<source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/socials/linkedin.svg" />
+<img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/socials/linkedin.svg" width="32" height="32" />
+</picture>
+</a>
+</p>
+
+---
+
+Design system of the project:
+![Inversion of Control, Dependency Injection, and Dependency Inversion concepts](https://personaltheobucket.s3.sa-east-1.amazonaws.com/ioc-di-dip-concepts/ioc-di-dip-concepts-project.png)
+---
+## SOLID Principles Implemented
+
+##### **S** → Single Responsibility Principle (SRP)
+##### **D** → Dependency Inversion Principle (DIP)
+
+---
 
 ### Source Code Dependency
-Direção em que as dependências do meu código vão
-Ex: PlaceOrderUseCase -> SQSGateway -> SQSClient...
+The direction in which the dependencies of my code flow.
+**Example**: `PlaceOrderUseCase -> SQSGateway -> SQSClient...`
 
-### Flow of control
-Ordem em que é executado o fluxo de execução do código
+
+### Flow of Control
+The order in which the code execution flow is executed.
+
+![Source Code Dependency and Flow of Control](https://personaltheobucket.s3.sa-east-1.amazonaws.com/ioc-di-dip-concepts/source-code-dependency-and-flow-of-control.png)
+---
 
 ## Inversion of Control (IoC)
-Mantenha a regra de negócio LIMPA e delegue configurações/lifecycles para sistemas/frameworks/coisas externas.
+Keep the business logic **CLEAN** and delegate configurations/lifecycles to external systems/frameworks.
 
-Nós não chamamos o framework.O framework é que nos chama.
+**Hollywood Principle**: *Don't call us, we call you.*
+**Target**: IoC
+**Solution**: Dependency Injection
 
-Princípio de Hollywood: Don't call us, we call you.
-
-Target: IoC
-Solution: Dependency Injection
-
+![IoC](https://personaltheobucket.s3.sa-east-1.amazonaws.com/ioc-di-dip-concepts/ioc.png)
+---
 
 ## Dependency Injection (DI)
-Consiste em INJETAR uma dependencia dentro uma classe/componente/função independente da forma como isso é feito.
-É uma maneira de inverter o Flow of control.
+It consists of **INJECTING** a dependency into a class/component/function, regardless of how it is done.
+It is a way to invert the **Flow of Control**.
 
+---
 
 ### Composition
-Composition é quando criamos a instância de um objeto dentro de outro, e este objeto tem lifecycle somente dentro de um escopo e não fora dele.
+Composition is when we create an instance of an object inside another, and this object has a lifecycle only within a specific scope and not outside of it.
 
-Exemplo:
-``
+**Example**:
 
-	export class PlaceOrder {
-		async execute() {
-			const customerEmail = 'matheusti.contato@gmail.com'
-			const amount = Math.ceil(Math.random() * 1000)
+```typescript
+export class PlaceOrder {
+    async execute() {
+        const customerEmail = 'some@mail.com';
+        const amount = Math.ceil(Math.random() * 1000);
 
-			const order = new Order(customerEmail, amount)
-		}
-	}
-``
-Neste caso, vemos que a instância de new Order() só existe no contexto da classe PlaceOrder.
-Ou seja, o new Order() só irá existir caso o PlaceOrder exista.
+        const order = new Order(customerEmail, amount);
+    }
+}
+```
+
+In this case, the instance of **`new Order()`** only exists within the context of the PlaceOrder class.
+In other words, **`new Order()`** will only exist if **`PlaceOrder`** exists.
+
+---
 
 ### Aggregation
-Temos um Aggregation quando fazemos a junção entre componentes.
+Aggregation occurs when we combine components.
 
-Exemplo:
+Example:
 
-`PlaceOrder.ts`
+**`PlaceOrder.ts`**
 
-``
+```typescript
+export class PlaceOrder {
+    constructor(
+        private readonly dynamoOrdersTableRepository: DynamoOrdersTableRepository,
+        private readonly sqsGateway: SQSGateway,
+        private readonly sesGateway: SESGateway,
+    ) {}
 
-	export class PlaceOrder {
-		constructor(
-			private readonly dynamoOrdersTableRepository: DynamoOrdersTableRepository,
-			private readonly sqsGateway: SQSGateway,
-			private readonly sesGateway: SESGateway,
-		) {}
+    async execute() {
+        const customerEmail = 'any@mail.com';
+        const amount = Math.ceil(Math.random() * 1000);
 
-		async execute() {
-			const customerEmail = 'matheusti.contato@gmail.com'
-			const amount = Math.ceil(Math.random() * 1000)
+        const order = new Order(customerEmail, amount);
+    }
+}
+```
 
-			const order = new Order(customerEmail, amount)
-		}
-	}
-``
-Note que estamos agregando o contrato de `DynamoOrdersTableRepository`, `SQSGateway`e `SESGateway` na classe `PlaceOrder`.
+Here, we are aggregating the contracts of **`DynamoOrdersTableRepository`**, **`SQSGateway`**, and **`SESGateway`** into the **`PlaceOrder`** class.
 
-`main.ts`
+**`main.ts`**
 
-``
+```typescript
 app.post('/orders', async (_, reply) => {
-	const dynamoOrdersTableRepository = new DynamoOrdersTableRepository()
-	const sqsGateway = new SQSGateway()
-	const sesGateway = new SESGateway()
+    const dynamoOrdersTableRepository = new DynamoOrdersTableRepository();
+    const sqsGateway = new SQSGateway();
+    const sesGateway = new SESGateway();
 
-	const placeOrder = new PlaceOrder(
-		dynamoOrdersTableRepository,
-		sqsGateway,
-		sesGateway,
-	)
+    const placeOrder = new PlaceOrder(
+        dynamoOrdersTableRepository,
+        sqsGateway,
+        sesGateway,
+    );
 
-	const { orderId } = await placeOrder.execute()
+    const { orderId } = await placeOrder.execute();
 
-	reply.status(201).send({ orderId })
-})
-``
+    reply.status(201).send({ orderId });
+});
+```
 
-Neste exemplo podemos ver que os contratos utilizados na agregação com `PlaceOrder` possuem um lifecycle fora do escopo em que são utilizadas. E eles trabalham de forma independente e isolada.
+In this example, the contracts used in the aggregation with **`PlaceOrder`** have a lifecycle outside the scope in which they are used. They work independently and in isolation.
+
+---
 
 ### Associations (has-a)
-A partir do momento em que um componente/classe/função possui uma agregação, ambas as `compositions`e `aggregations` se tornam uma `association`.
+From the moment a component/class/function has an aggregation, both compositions and aggregations become an association.
 
-Seguindo o exemplo utilizado na seção `Aggregation`, tanto `PlaceOrder`como os contratos `DynamoOrdersTableRepository`, `SQSGateway`e `SESGateway` passam a ser `associations` pelo simples fato de que `PlaceOrder`tem um (has-a) `DynamoOrdersTableRepository` e assim por diante.
+Following the example used in the Aggregation section, both **`PlaceOrder`** and the contracts **`DynamoOrdersTableRepository`**, **`SQSGateway`**, and **`SESGateway`** become associations simply because **`PlaceOrder`** has-a **`DynamoOrdersTableRepository`**, and so on.
 
-É interessante ter olhar crítico ao criar abstrações dentro do sistema, criar abstrações desnecessárias pode trazer muita complexidade para o projeto de forma desnecessária.
-Bibliotecas que são utilizadas em muitas partes do código como por exemplo uma lib de geração de hash como `bcrypt` que é utilizada em mais de uma área do sistema, ou serviços externos tendem a ser fortes candidatos para abstrações.
+It is important to have a critical eye when creating abstractions within the system. Creating unnecessary abstractions can bring unnecessary complexity to the project.
+Libraries that are used in many parts of the code, such as a hash generation library like bcrypt or external services, tend to be strong candidates for abstractions.
 
+---
 
 ## Dependency Inversion Principle (DIP)
-`High-level` modules should not depend on `low-level` modules.
-Both should be depend on `abstractions`.
 
-High-level modules: códigos de regra de negócio;
-Low-level modules: implementações de infraestrutura, interação com fonte de dados, serviços externos e outros.
+**High-level modules should not depend on low-level modules.**
+**Both should depend on abstractions.**
 
-Seguindo o exemplo abaixo
+**`High-level`** modules: Business rule code.
 
-``
+**`Low-level`** modules: Infrastructure implementations, interaction with data sources, external services, and others.
 
+![DIP](https://personaltheobucket.s3.sa-east-1.amazonaws.com/ioc-di-dip-concepts/dip.png)
+
+Following the example below:
+
+```typescript
 export class PlaceOrder {
-	constructor(
-		private readonly dynamoOrdersTableRepository: DynamoOrdersTableRepository,
-		private readonly sqsGateway: SQSGateway,
-		private readonly sesGateway: SESGateway,
-	) {}
+    constructor(
+        private readonly dynamoOrdersTableRepository: DynamoOrdersTableRepository,
+        private readonly sqsGateway: SQSGateway,
+        private readonly sesGateway: SESGateway,
+    ) {}
 
-	async execute() {
-		const customerEmail = 'matheusti.contato@gmail.com'
-		const amount = Math.ceil(Math.random() * 1000)
+    async execute() {
+        const customerEmail = 'some@mail.com';
+        const amount = Math.ceil(Math.random() * 1000);
 
-		const order = new Order(customerEmail, amount)
+        const order = new Order(customerEmail, amount);
 
-		await this.dynamoOrdersTableRepository.create(order)
-		await this.sqsGateway.publishMessage({ orderId: order.id })
-		await this.sesGateway.sendEmail({
-			from: 'matheusti.contato@gmail.com',
-			to: [customerEmail],
-			subject: `Pedido #${order.id} confirmado!`,
-			html: `
-				<h1>E aí, galera!</h1>
+        await this.dynamoOrdersTableRepository.create(order);
+        await this.sqsGateway.publishMessage({ orderId: order.id });
+        await this.sesGateway.sendEmail({
+            from: 'any@mail.com',
+            to: [customerEmail],
+            subject: `Order #${order.id} confirmed!`,
+            html: `
+                <h1>Hey, everyone!</h1>
+                <p>Just passing by to let you know that your order has been confirmed, and soon you will receive the payment confirmation and invoice via email!</p>
+            `,
+        });
 
-				<p>Passando aqui só pra avisar que o seu pedido já foi confirmado e em breve você receberá a confirmação do pagamento e a nota fiscal aqui no seu e-mail!</p>
-			`,
-		})
-
-		return {
-			orderId: order.id,
-		}
-	}
+        return {
+            orderId: order.id,
+        };
+    }
 }
-``
+```
 
-`PlaceOrder` é um High-level module, enquanto as implementações `DynamoOrdersTableRepository`, `SQSGateway`e `SESGateway` são Low-level modules.
+**`PlaceOrder`** is a **`High-level`** module, while the implementations **`DynamoOrdersTableRepository`**, **`SQSGateway`**, and **`SESGateway`** are **`Low-level`** modules.
 
+---
 
 ## Dependency Injection Container
-Objeto que contém todas as dependências que utilizaremos ao longo do projeto
+An object that contains all the dependencies we will use throughout the project.
